@@ -1,0 +1,115 @@
+OpenNeuro curator note: This dataset was previously accessible at ds001219. The dataset was reuploaded due to privacy considerations. 
+
+EEG_data files contain EEG preprocessed data for each subject,session.
+EEG_events contain two cells of relevant events for the two sessions of each subject
+
+EEG_data 
+Y : [number of electrodes x number_of_times double] => EEG activity for all electrodes and all times
+
+EEG_events fields for each cell
+
+respt: [1xnumber_of_trials double] => response onset times (in ms)
+
+rt: [1xnumber_of_trials double] => reaction times (ms)
+
+tstim: [1xnumber_of_trials double] => stimulus onset times (in ms)
+
+resptexcl: [1x13 double] => excluded response times
+
+tstimexcl: 5.8806e+05  => excluded stimulus onset times
+
+diffV: [1xnumber_of_trials double]=>item rating difference (absolute stimulus difficulty)
+
+corr: [1xnumber_of_trials logical] =>accuracy (1:correct, 0:error)
+
+ratL:  [1xnumber_of_trials double]=>rating of item on the left of fixation cross
+
+ratR:  [1xnumber_of_trials double]=>rating of item on the right of fixation cross
+
+chooseL: [1xnumber_of_trials logical]=>choosing left? (1:yes, 0:no)
+
+chooseR: [1xnumber_of_trials logical]=>choosing right? (1:yes, 0:no)
+
+t0: constant time to shift fMRI events to align to EEG onset times (see below)
+
+
+METHODS OF EEG PREPROCESSING
+We performed EEG pre-processing offline using MATLAB
+(Mathworks, Natick, MA). EEG signals recorded inside an MR scanner are
+contaminated with gradient and ballistocardiogram (BCG) artifacts due to
+magnetic induction on the EEG leads. We first removed the gradient artifacts.
+Specifically, from each functional volume acquisition we subtracted the average
+artifact template constructed using the 80 volumes centred on the volume-ofinterest
+using in-house MATLAB software. We repeated this process for as
+many times as there were functional volumes in our data sets. We subsequently
+applied a 10-ms median filter to remove any residual spike artifacts. Next, we
+band-pass filtered the data by applying a 0.5-Hz high-pass filter to remove direct
+current (DC) drifts and a 40Hz low-pass filter to remove high frequency artifacts
+not associated with neurophysiological processes of interest. These filters were
+applied together, non-causally to avoid distortions caused by phase delays.
+BCG artifacts share frequency content with the EEG and as such are more
+challenging to remove. To avoid loss of signal power in the underlying EEG
+we adopted a conservative approach and removed a small number of BCG
+components using principal component analysis in two steps. Firstly, four BCG
+principal components were extracted from data that were initially low-pass filtered
+at 4Hz to extract the signal within the frequency range where BCG artifacts are
+observed. Secondly, the sensor weightings corresponding to those components
+were projected onto the broadband (original) data and subtracted out.
+
+fMRI_data files contain fMRI preprocessed data for each subject,session.
+
+
+METHODS FOR fMRI PREPROCESSING
+We discarded the first ten volumes from each fMRI run to
+ensure a steady-state MR signal, and we used the remaining 307 volumes for the
+statistical analysis presented in this study. Pre-processing of our data was
+performed using the FMRIB�s Software Library (Functional MRI of the Brain,
+Oxford, UK) and included: head-related motion correction, slice-timing correction,
+high-pass filtering (4100 s), and spatial smoothing (with a Gaussian kernel of
+8mm full-width at half maximum). To register our EPI image to standard space,
+we first transformed the EPI images into each individual�s high-resolution space
+with a linear six-parameter rigid body transformation. We then registered the
+image to standard space (Montreal Neurological Institute, MNI) using FMRIB�s
+Non-linear Image Registration Tool with a resolution warp of 10 mm. Finally, B0
+unwarping was applied to correct for signal loss and geometric distortions due to
+B0 field inhomogeneities in the EPI images.
+
+METHODS TO CREATE fMRI REGRESSORS
+We performed whole-brain statistical analyses of functional data
+using a multilevel approach within the generalized linear model (GLM) framework,
+as implemented in FSL through the FEAT module:
+Y= Xb + E = b1X1+ b2X2 + b3X3 +b4X4 + E
+where Y is the times series of a given voxel comprising T time samples and X is a
+Tx4 design matrix  with columns representing four different regressors
+(see below) convolved with a canonical hemodynamic response function (double-g
+function). The regressors times are shifted by the fMRI t0 (the EEG time at which the scanner started) which is 
+saved in the EEG events files.
+
+b is a 4x1 column vector of regression coefficients and e a Tx1
+column vector of residual error terms. We performed a first-level analysis to
+analyse each participant�s individual runs, which were then combined using a
+second-level analysis (fixed effects). Finally, we used a third-level, mixed-effects
+model (FLAME 1) to combine data across subjects, treating participants as a
+random effect. Time-series statistical analysis was carried out using FMRIB�s
+improved linear model with local autocorrelation correction.
+
+Our GLM model included an EEG-informed regressor capturing the trial-by-trial
+dynamics of the process of EA. Specifically, for each trial we used the raw
+EEG time-series (from the subject-specific sensor that was most predictive of the
+model-derived EA profile) to parametrically modulate the regressor amplitudes.
+We considered the entire trial duration (that is, RT) minus the subject-specific nDT
+estimated by the model, which accounted for stimulus processing and motor
+execution. More specifically, we split this nDT in two intervals by fixing the motor
+preparation to 100 ms prior to the response (when a sudden increase in
+corticospinal excitability occurs) and setting the average duration of the stimulus
+encoding to nDT-100 ms . To absorb the variance associated with other
+task-related processes we included three additional regressors: (1) an unmodulated
+stick function regressor at the onset of the stimuli, (2) a stick function regressor at
+the onset of stimuli that was parametrically modulated by the VD between the
+decision alternatives and (3) a stick function regressor aligned at the time of
+response and modulated by RT . As a control analysis we also removed the
+RT and VD regressors from the GLM design to test if our EEG-informed regressor
+absorbed additional activations. The only activation we found in the EEG-informed
+regressor was the one capturing accumulation dynamics as in the main analysis
+(that is, pMFC) with a marginal improvement in the statistical significance of the
+area.
